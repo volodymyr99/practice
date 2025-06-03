@@ -2,7 +2,12 @@
 from flask_sqlalchemy import SQLAlchemy
 import os
 from dotenv import load_dotenv
+from flask_login import LoginManager
+from .models import Users  
 
+login_manager = LoginManager()
+login_manager.login_view = 'views.login'  # маршрут логіну
+login_manager.login_message = "Будь ласка, увійдіть, щоб продовжити"
 
 db = SQLAlchemy()
 
@@ -22,3 +27,7 @@ def create_app():
     app.register_blueprint(views)
 
     return app
+
+@login_manager.user_loader
+def load_user(user_id):
+    return db.session.get(Users, int(user_id))
