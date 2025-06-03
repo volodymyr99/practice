@@ -1,0 +1,35 @@
+﻿{% extends "layout.html" %}
+
+{% block content %}
+
+<h2 class="mb-4">Реєстрація</h2>
+<form method="POST">
+
+    <div class="mb-3">
+        <label for="username" class="form-label">Прізвище та ім'я</label>
+        <input name="username" type="text" class="form-control">
+    </div>
+    <br />
+    <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input name="email" type="email" class="form-control" required>
+    </div>
+    <br />
+    <div class="mb-3">
+        <label for="password" class="form-label">Пароль</label>
+        <input name="password" type="password" class="form-control" required>
+    </div>
+    <br />
+    <div class="mb-3">
+        <label for="role" class="form-label">Роль</label>
+        <select name="role" class="form-select">
+            <option value="student" selected>Студент</option>
+            <option value="teacher">Викладач</option>
+            <option value="staff">Працівник центру</option>
+        </select>
+    </div>
+    <br />
+    <button type="submit" class="btn btn-primary">Зареєструватися</button>
+</form>
+
+{% endblock %}
