@@ -10,33 +10,34 @@
 </head>
 
 <body>
-    <div class="navbar navbar-inverse navbar-fixed-top">
-        <div class="container">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a href="/" class="navbar-brand">Application name</a>
-            </div>
-            <div class="navbar-collapse collapse">
-                <ul class="nav navbar-nav">
-                    <li><a href="{{ url_for('views.home') }}">Home</a></li>
-                    <li><a href="{{ url_for('views.about') }}">About</a></li>
-                    <li><a href="{{ url_for('views.contact') }}">Contact</a></li>
-                    <li><a href="{{ url_for('views.login') }}">Contact</a></li>
-                </ul>
-            </div>
-        </div>
+    <header>
+        <h1 class="text-white text-center">Практика</h1>
+    </header>
+
+    <div class="sidebar">
+
+
+        <a href="{{ url_for('views.home') }}">Головна</a>
+        <a href="{{ url_for('views.about') }}">About</a>
+        <a href="{{ url_for('views.contact') }}">Contact</a>
+        <a href="{{ url_for('views.login') }}">Вхід</a>
+       
+
     </div>
 
-    <div class="container body-content">
+
+    <div class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="container mt-3">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
         {% block content %}{% endblock %}
-        <hr />
-        <footer>
-            <p>&copy; {{ year }} - My Flask Application</p>
-        </footer>
+
     </div>
 
     <script src="/static/scripts/jquery-1.10.2.js"></script>
