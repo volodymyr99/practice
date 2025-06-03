@@ -1,9 +1,7 @@
-"""
-This script runs the practice application using a development server.
-"""
-
 from os import environ
-from practice import app
+from practice import create_app
+
+app = create_app()
 
 if __name__ == '__main__':
     HOST = environ.get('SERVER_HOST', 'localhost')
