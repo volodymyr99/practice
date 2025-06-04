@@ -16,12 +16,17 @@
 
     <div class="sidebar">
 
-
+        {% if current_user.is_authenticated %}
+        <div class="sidebar-user-info mb-3">
+            <p>👤 {{ current_user.username or current_user.email }}</p>
+            <a href="{{ url_for('views.logout') }}" class="btn btn-outline-danger btn-sm">Вийти</a>
+        </div>
+        {% endif %}
         <a href="{{ url_for('views.home') }}">Головна</a>
         <a href="{{ url_for('views.about') }}">About</a>
         <a href="{{ url_for('views.contact') }}">Contact</a>
         <a href="{{ url_for('views.login') }}">Вхід</a>
-       
+
 
     </div>
 

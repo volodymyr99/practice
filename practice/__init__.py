@@ -22,6 +22,7 @@ def create_app():
     # 🔌 Ініціалізуємо SQLAlchemy
     db.init_app(app)
 
+    login_manager.init_app(app)
     # 🔁 Підключаємо Blueprint
     from .views import views
     app.register_blueprint(views)
