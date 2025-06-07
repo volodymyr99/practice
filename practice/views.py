@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
-from .models import Users, PracticeBases
+from .models import Users, PracticeBases, Groups
 from . import db
 
 
@@ -155,3 +155,110 @@ def manage_practice_bases():
     return render_template('manage_practice_bases.html', 
                          base=base,
                          practice_bases=practice_bases)
+
+@views.route('/manage_groups', methods=['GET', 'POST'])
+@login_required
+def manage_groups():
+    # Перевірка чи користувач має роль staff
+    if current_user.role != 'staff':
+        flash('У вас немає доступу до цієї сторінки', 'error')
+        return redirect(url_for('views.home'))
+
+    # Отримання ID для редагування або видалення з query параметрів
+    edit_id = request.args.get('edit', type=int)
+    delete_id = request.args.get('delete', type=int)
+
+    if request.method == 'POST':
+        if delete_id:
+            # Видалення групи
+            group = db.session.get(Groups, delete_id)
+            if group:
+                db.session.delete(group)
+                db.session.commit()
+                flash('Групу успішно видалено', 'success')
+            return redirect(url_for('views.manage_groups'))
+
+        # Отримання даних з форми
+        name = request.form.get('name')
+        year = request.form.get('year')
+        group_id = request.form.get('group_id')
+
+        if group_id:
+            # Редагування існуючої групи
+            group = db.session.get(Groups, int(group_id))
+            if group:
+                group.name = name
+                group.year = year
+                flash('Групу успішно оновлено', 'success')
+        else:
+            # Додавання нової групи
+            new_group = Groups(
+                name=name,
+                year=year
+            )
+            db.session.add(new_group)
+            flash('Нову групу успішно додано', 'success')
+
+        db.session.commit()
+        return redirect(url_for('views.manage_groups'))
+
+    # Отримання групи для редагування
+    group = None
+    if edit_id:
+        group = db.session.get(Groups, edit_id)
+
+    # Отримання всіх груп для відображення в таблиці
+    groups = db.session.query(Groups).all()
+
+    return render_template('manage_groups.html', 
+                         group=group,
+                         groups=groups)
+
+@views.route('/manage_group_students/<int:group_id>', methods=['GET', 'POST'])
+@login_required
+def manage_group_students(group_id):
+    # Перевірка чи користувач має роль staff
+    if current_user.role != 'staff':
+        flash('У вас немає доступу до цієї сторінки', 'error')
+        return redirect(url_for('views.home'))
+
+    # Отримання групи
+    group = db.session.get(Groups, group_id)
+    if not group:
+        flash('Групу не знайдено', 'error')
+        return redirect(url_for('views.manage_groups'))
+
+    # Отримання ID студента для видалення з групи
+    remove_student_id = request.args.get('remove', type=int)
+
+    if request.method == 'POST':
+        if remove_student_id:
+            # Видалення студента з групи
+            student = db.session.get(Users, remove_student_id)
+            if student and student.group_id == group_id:
+                student.group_id = None
+                db.session.commit()
+                flash('Студента успішно видалено з групи', 'success')
+        else:
+            # Додавання студента до групи
+            student_id = request.form.get('student_id')
+            student = db.session.get(Users, student_id)
+            if student and student.role == 'student':
+                student.group_id = group_id
+                db.session.commit()
+                flash('Студента успішно додано до групи', 'success')
+            else:
+                flash('Неможливо додати цього користувача до групи', 'error')
+
+        return redirect(url_for('views.manage_group_students', group_id=group_id))
+
+    # Отримання студентів групи
+    group_students = db.session.query(Users).filter_by(group_id=group_id, role='student').all()
+
+    # Отримання доступних студентів (які не в групі)
+    available_students = db.session.query(Users).filter_by(role='student', group_id=None).all()
+
+    return render_template('manage_group_students.html',
+                         group=group,
+                         group_students=group_students,
+                         available_students=available_students)

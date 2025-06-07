@@ -1,0 +1,69 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Управління студентами групи {{ group.name }}</h2>
+        <a href="{{ url_for('views.manage_groups') }}" class="btn btn-secondary">Назад до груп</a>
+    </div>
+
+    <!-- Форма додавання студента до групи -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4 class="mb-0">Додати студента до групи</h4>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('views.manage_group_students', group_id=group.id) }}">
+                <div class="mb-3">
+                    <label for="student_id" class="form-label">Виберіть студента</label>
+                    <select class="form-select" id="student_id" name="student_id" required>
+                        <option value="">Виберіть студента...</option>
+                        {% for student in available_students %}
+                        <option value="{{ student.id }}">{{ student.username }} ({{ student.email }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Додати до групи</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Таблиця зі списком студентів групи -->
+    <div class="card">
+        <div class="card-header">
+            <h4 class="mb-0">Студенти групи</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Ім'я користувача</th>
+                            <th>Email</th>
+                            <th>Повне ім'я</th>
+                            <th>Дії</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in group_students %}
+                        <tr>
+                            <td>{{ student.id }}</td>
+                            <td>{{ student.username }}</td>
+                            <td>{{ student.email }}</td>
+                            <td>{{ student.full_name or '-' }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('views.manage_group_students', group_id=group.id, remove=student.id) }}" 
+                                      class="d-inline" onsubmit="return confirm('Ви впевнені, що хочете видалити цього студента з групи?');">
+                                    <button type="submit" class="btn btn-sm btn-danger">Видалити з групи</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
