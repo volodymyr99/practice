@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-body">
+            <div class="text-center mb-4">
+                <h2>НАКАЗ</h2>
+                <p class="mb-4">
+                    НАКАЗУЮ Направити нижче вказаних здобувачів освіти групи {{ group.name }} на практику з {{ start_date }} по {{ end_date }} 
+                    до підприємств, установ, закладів, організацій та призначити керівників практики. 
+                    У період практики на здобувачів поширюються діючі в установах, закладах та організаціях 
+                    Правила внутрішнього (трудового) розпорядку баз практики.
+                </p>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>№</th>
+                            <th>ПІБ студента</th>
+                            <th>База практики</th>
+                            <th>Керівник практики</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for assignment in assignments %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ assignment.student.full_name or assignment.student.username }}</td>
+                            <td>{{ assignment.base.name }}</td>
+                            <td>{{ assignment.supervisor.full_name or assignment.supervisor.username }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="text-center mt-4">
+                <button class="btn btn-primary" disabled>Експорт</button>
+                <a href="{{ url_for('views.create_practice_order') }}" class="btn btn-secondary">Назад</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

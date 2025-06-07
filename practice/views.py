@@ -1,8 +1,8 @@
 ﻿from datetime import datetime
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
-from .models import Users, PracticeBases, Groups
+from .models import Users, PracticeBases, Groups, PracticeStages, PracticeAssignments
 from . import db
 
 
@@ -262,3 +262,103 @@ def manage_group_students(group_id):
                          group=group,
                          group_students=group_students,
                          available_students=available_students)
+
+@views.route('/create_practice_order', methods=['GET', 'POST'])
+@login_required
+def create_practice_order():
+    # Перевірка чи користувач має роль staff
+    if current_user.role != 'staff':
+        flash('У вас немає доступу до цієї сторінки', 'error')
+        return redirect(url_for('views.home'))
+
+    if request.method == 'POST':
+        # Отримання даних з форми
+        group_id = request.form.get('group_id')
+        practice_stage_id = request.form.get('practice_stage_id')
+        start_date = request.form.get('start_date')
+        end_date = request.form.get('end_date')
+
+        # Отримання групи та перевірка її існування
+        group = db.session.get(Groups, group_id)
+        if not group:
+            flash('Групу не знайдено', 'error')
+            return redirect(url_for('views.create_practice_order'))
+
+        # Отримання студентів групи
+        students = db.session.query(Users).filter_by(group_id=group_id, role='student').all()
+        
+        # Створення призначень практики для кожного студента
+        assignments = []
+        for student in students:
+            base_id = request.form.get(f'base_id_{student.id}')
+            supervisor_id = request.form.get(f'supervisor_id_{student.id}')
+
+            if not base_id or not supervisor_id:
+                flash('Не всі студенти мають призначені бази практики та керівників', 'error')
+                return redirect(url_for('views.create_practice_order'))
+
+            # Створення призначення практики
+            assignment = PracticeAssignments(
+                student_id=student.id,
+                group_id=group_id,
+                practice_stage_id=practice_stage_id,
+                supervisor_id=supervisor_id,
+                base_id=base_id,
+                start_date=datetime.strptime(start_date, '%Y-%m-%d').date(),
+                end_date=datetime.strptime(end_date, '%Y-%m-%d').date(),
+                status='assigned'
+            )
+            db.session.add(assignment)
+            assignments.append(assignment)
+
+        db.session.commit()
+
+        # Перенаправлення на сторінку з наказом
+        return render_template('practice_order.html',
+                             group=group,
+                             start_date=start_date,
+                             end_date=end_date,
+                             assignments=assignments)
+
+    # GET запит - відображення форми
+    groups = db.session.query(Groups).all()
+    practice_stages = db.session.query(PracticeStages).all()
+    practice_bases = db.session.query(PracticeBases).all()
+    teachers = db.session.query(Users).filter_by(role='teacher').all()
+
+    return render_template('create_practice_order.html',
+                         groups=groups,
+                         practice_stages=practice_stages,
+                         practice_bases=practice_bases,
+                         teachers=teachers)
+
+@views.route('/get_group_students/<int:group_id>')
+@login_required
+def get_group_students(group_id):
+    try:
+        if current_user.role != 'staff':
+            return jsonify({'error': 'Unauthorized'}), 403
+
+        # Перевіряємо існування групи
+        group = db.session.get(Groups, group_id)
+        if not group:
+            return jsonify({'error': 'Group not found'}), 404
+
+        # Отримуємо студентів групи
+        students = db.session.query(Users).filter_by(group_id=group_id, role='student').all()
+        
+        # Формуємо відповідь
+        students_data = [{
+            'id': student.id,
+            'username': student.username,
+            'full_name': student.full_name or student.username
+        } for student in students]
+
+        return jsonify({
+            'success': True,
+            'students': students_data
+        })
+
+    except Exception as e:
+        print(f"Error in get_group_students: {str(e)}")  # Для дебагу
+        return jsonify({'error': 'Internal server error'}), 500

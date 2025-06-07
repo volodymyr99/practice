@@ -1,0 +1,218 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Формування наказу на практику</h2>
+    
+    <!-- Форма створення наказу -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4 class="mb-0">Параметри наказу</h4>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('views.create_practice_order') }}" id="orderForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="group_id" class="form-label">Група</label>
+                        <select class="form-select" id="group_id" name="group_id" required>
+                            <option value="">Виберіть групу...</option>
+                            {% for group in groups %}
+                            <option value="{{ group.id }}">{{ group.name }} ({{ group.year }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="practice_stage_id" class="form-label">Тип практики</label>
+                        <select class="form-select" id="practice_stage_id" name="practice_stage_id" required>
+                            <option value="">Виберіть тип практики...</option>
+                            {% for stage in practice_stages %}
+                            <option value="{{ stage.id }}">{{ stage.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="start_date" class="form-label">Дата початку</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" required>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="end_date" class="form-label">Дата завершення</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" required>
+                    </div>
+                </div>
+
+                <div id="studentsContainer" class="mt-4" style="display: none;">
+                    <h5>Призначення студентів</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Студент</th>
+                                    <th>База практики</th>
+                                    <th>Керівник практики</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentsTableBody">
+                                <!-- Буде заповнено через JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary" id="submitButton" disabled>Сформувати наказ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Зберігаємо дані про викладачів
+const teachers = [
+    {% for teacher in teachers %}
+    {
+        id: {{ teacher.id }},
+        username: "{{ teacher.username }}",
+        full_name: "{{ teacher.full_name or teacher.username }}"
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
+
+// Функція для перевірки заповненості всіх полів
+function checkFormValidity() {
+    const groupId = document.getElementById('group_id').value;
+    const practiceStageId = document.getElementById('practice_stage_id').value;
+    const startDate = document.getElementById('start_date').value;
+    const endDate = document.getElementById('end_date').value;
+    const submitButton = document.getElementById('submitButton');
+    
+    // Перевіряємо основні поля
+    if (!groupId || !practiceStageId || !startDate || !endDate) {
+        submitButton.disabled = true;
+        return;
+    }
+    
+    // Перевіряємо призначення для студентів
+    const baseSelects = document.querySelectorAll('select[name^="base_id_"]');
+    const supervisorSelects = document.querySelectorAll('select[name^="supervisor_id_"]');
+    
+    if (baseSelects.length === 0 || supervisorSelects.length === 0) {
+        submitButton.disabled = true;
+        return;
+    }
+    
+    for (let i = 0; i < baseSelects.length; i++) {
+        if (!baseSelects[i].value || !supervisorSelects[i].value) {
+            submitButton.disabled = true;
+            return;
+        }
+    }
+    
+    // Якщо всі перевірки пройшли успішно
+    submitButton.disabled = false;
+}
+
+// Додаємо обробники подій для всіх полів форми
+document.getElementById('group_id').addEventListener('change', function() {
+    const groupId = this.value;
+    const container = document.getElementById('studentsContainer');
+    const tableBody = document.getElementById('studentsTableBody');
+    const submitButton = document.getElementById('submitButton');
+    
+    // Очищаємо контейнер і деактивуємо кнопку при зміні групи
+    container.style.display = 'none';
+    submitButton.disabled = true;
+    tableBody.innerHTML = '';
+    
+    if (groupId) {
+        // Показуємо індикатор завантаження
+        tableBody.innerHTML = '<tr><td colspan="3" class="text-center">Завантаження...</td></tr>';
+        container.style.display = 'block';
+        
+        fetch(`{{ url_for('views.get_group_students', group_id=0) }}`.replace('0', groupId))
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || 'Помилка завантаження студентів');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                tableBody.innerHTML = '';
+                
+                if (data.success && data.students && data.students.length > 0) {
+                    data.students.forEach(student => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${student.full_name}</td>
+                            <td>
+                                <select class="form-select" name="base_id_${student.id}" required onchange="checkFormValidity()">
+                                    <option value="">Виберіть базу практики...</option>
+                                    {% for base in practice_bases %}
+                                    <option value="{{ base.id }}">{{ base.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>
+                                <select class="form-select" name="supervisor_id_${student.id}" required onchange="checkFormValidity()">
+                                    <option value="">Виберіть керівника...</option>
+                                    ${teachers.map(teacher => `
+                                        <option value="${teacher.id}">${teacher.full_name}</option>
+                                    `).join('')}
+                                </select>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                } else {
+                    tableBody.innerHTML = '<tr><td colspan="3" class="text-center">У вибраній групі немає студентів</td></tr>';
+                }
+                
+                container.style.display = 'block';
+                checkFormValidity();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                tableBody.innerHTML = `<tr><td colspan="3" class="text-center text-danger">${error.message}</td></tr>`;
+            });
+    }
+});
+
+// Додаємо обробники подій для інших полів
+document.getElementById('practice_stage_id').addEventListener('change', checkFormValidity);
+document.getElementById('start_date').addEventListener('change', checkFormValidity);
+document.getElementById('end_date').addEventListener('change', checkFormValidity);
+
+// Валідація форми перед відправкою
+document.getElementById('orderForm').addEventListener('submit', function(e) {
+    const groupId = document.getElementById('group_id').value;
+    const practiceStageId = document.getElementById('practice_stage_id').value;
+    const startDate = document.getElementById('start_date').value;
+    const endDate = document.getElementById('end_date').value;
+    
+    if (!groupId || !practiceStageId || !startDate || !endDate) {
+        e.preventDefault();
+        alert('Будь ласка, заповніть всі обов\'язкові поля');
+        return;
+    }
+    
+    // Перевіряємо, чи всі студенти мають призначені бази практики та керівників
+    const baseSelects = document.querySelectorAll('select[name^="base_id_"]');
+    const supervisorSelects = document.querySelectorAll('select[name^="supervisor_id_"]');
+    
+    for (let i = 0; i < baseSelects.length; i++) {
+        if (!baseSelects[i].value || !supervisorSelects[i].value) {
+            e.preventDefault();
+            alert('Будь ласка, призначте базу практики та керівника для всіх студентів');
+            return;
+        }
+    }
+});
+</script>
+{% endblock %} 
