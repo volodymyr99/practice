@@ -22,6 +22,9 @@ def create_app():
     # 🔌 Ініціалізуємо SQLAlchemy
     db.init_app(app)
 
+    # 🔐 Ініціалізуємо Flask-Login
+    login_manager.init_app(app)
+
     # 🔁 Підключаємо Blueprint
     from .views import views
     app.register_blueprint(views)

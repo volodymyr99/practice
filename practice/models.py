@@ -4,6 +4,7 @@ from sqlalchemy import Date, DateTime, ForeignKeyConstraint, Index, String, Text
 from sqlalchemy.dialects.mysql import ENUM, INTEGER
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 import datetime
+from flask_login import UserMixin
 
 class Base(DeclarativeBase):
     pass
@@ -67,7 +68,7 @@ class OrdersAndContracts(Base):
     group: Mapped['Groups'] = relationship('Groups', back_populates='orders_and_contracts')
 
 
-class Users(Base):
+class Users(Base, UserMixin):
     __tablename__ = 'users'
     __table_args__ = (
         ForeignKeyConstraint(['group_id'], ['groups.id'], ondelete='SET NULL', name='users_ibfk_1'),

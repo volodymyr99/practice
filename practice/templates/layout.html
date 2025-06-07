@@ -11,20 +11,51 @@
 
 <body>
     <header>
-        <h1 class="text-white text-center">Практика</h1>
+        
     </header>
 
     <div class="sidebar">
-
-
-        <a href="{{ url_for('views.home') }}">Головна</a>
-        <a href="{{ url_for('views.about') }}">About</a>
-        <a href="{{ url_for('views.contact') }}">Contact</a>
-        <a href="{{ url_for('views.login') }}">Вхід</a>
-       
-
+        <h1 class="text-white text-center">Практик-Асистент</h1>
+        
+        {% if current_user.is_authenticated %}
+            <div class="user-info mb-3">
+                <p class="text-white text-center">{{ current_user.username }}</p>
+            </div>
+            
+            {% if current_user.role == 'staff' %}
+                <a href="{{ url_for('views.home') }}">Головна</a>
+                <a href="{{ url_for('views.about') }}">Управління користувачами</a>
+                <a href="{{ url_for('views.about') }}">Управління групами</a>
+                <a href="{{ url_for('views.about') }}">Бази практики</a>
+                <a href="{{ url_for('views.about') }}">Етапи практики</a>
+                <a href="{{ url_for('views.about') }}">Про систему</a>
+                <a href="{{ url_for('views.logout') }}">Вихід</a>
+            
+            {% elif current_user.role == 'teacher' %}
+                <a href="{{ url_for('views.home') }}">Головна</a>
+                <a href="{{ url_for('views.about') }}">Мої студенти</a>
+                <a href="{{ url_for('views.about') }}">Оцінювання практики</a>
+                <a href="{{ url_for('views.about') }}">Ресурси</a>
+                <a href="{{ url_for('views.about') }}">Повідомлення</a>
+                <a href="{{ url_for('views.about') }}">Про систему</a>
+                <a href="{{ url_for('views.logout') }}">Вихід</a>
+            
+            {% elif current_user.role == 'student' %}
+                <a href="{{ url_for('views.home') }}">Головна</a>
+                <a href="{{ url_for('views.about') }}">Моя практика</a>
+                <a href="{{ url_for('views.about') }}">Завантажити звіт</a>
+                <a href="{{ url_for('views.about') }}">Ресурси</a>
+                <a href="{{ url_for('views.about') }}">Повідомлення</a>
+                <a href="{{ url_for('views.about') }}">Про систему</a>
+                <a href="{{ url_for('views.logout') }}">Вихід</a>
+            {% endif %}
+            
+        {% else %}
+            <a href="{{ url_for('views.home') }}">Головна</a>
+            <a href="{{ url_for('views.about') }}">Про систему</a>
+            <a href="{{ url_for('views.login') }}">Вхід</a>
+        {% endif %}
     </div>
-
 
     <div class="main-content">
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -37,7 +68,6 @@
         {% endif %}
         {% endwith %}
         {% block content %}{% endblock %}
-
     </div>
 
     <script src="/static/scripts/jquery-1.10.2.js"></script>
