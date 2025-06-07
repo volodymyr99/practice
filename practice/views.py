@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
-from .models import Users
+from .models import Users, PracticeBases
 from . import db
 
 
@@ -94,3 +94,64 @@ def register():
         return redirect(url_for('views.login'))
 
     return render_template('register.html')
+
+@views.route('/manage_practice_bases', methods=['GET', 'POST'])
+@login_required
+def manage_practice_bases():
+    # Перевірка чи користувач має роль staff
+    if current_user.role != 'staff':
+        flash('У вас немає доступу до цієї сторінки', 'error')
+        return redirect(url_for('views.home'))
+
+    # Отримання ID для редагування або видалення з query параметрів
+    edit_id = request.args.get('edit', type=int)
+    delete_id = request.args.get('delete', type=int)
+
+    if request.method == 'POST':
+        if delete_id:
+            # Видалення бази практики
+            base = db.session.get(PracticeBases, delete_id)
+            if base:
+                db.session.delete(base)
+                db.session.commit()
+                flash('Базу практики успішно видалено', 'success')
+            return redirect(url_for('views.manage_practice_bases'))
+
+        # Отримання даних з форми
+        name = request.form.get('name')
+        address = request.form.get('address')
+        contact_info = request.form.get('contact_info')
+        base_id = request.form.get('base_id')
+
+        if base_id:
+            # Редагування існуючої бази практики
+            base = db.session.get(PracticeBases, int(base_id))
+            if base:
+                base.name = name
+                base.address = address
+                base.contact_info = contact_info
+                flash('Базу практики успішно оновлено', 'success')
+        else:
+            # Додавання нової бази практики
+            new_base = PracticeBases(
+                name=name,
+                address=address,
+                contact_info=contact_info
+            )
+            db.session.add(new_base)
+            flash('Нову базу практики успішно додано', 'success')
+
+        db.session.commit()
+        return redirect(url_for('views.manage_practice_bases'))
+
+    # Отримання бази практики для редагування
+    base = None
+    if edit_id:
+        base = db.session.get(PracticeBases, edit_id)
+
+    # Отримання всіх баз практики для відображення в таблиці
+    practice_bases = db.session.query(PracticeBases).all()
+
+    return render_template('manage_practice_bases.html', 
+                         base=base,
+                         practice_bases=practice_bases)

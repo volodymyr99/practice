@@ -1,0 +1,90 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Управління базами практики</h2>
+    
+    <!-- Форма додавання/редагування бази практики -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4 class="mb-0">{{ 'Редагувати базу практики' if base else 'Додати нову базу практики' }}</h4>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('views.manage_practice_bases') }}">
+                {% if base %}
+                <input type="hidden" name="base_id" value="{{ base.id }}">
+                {% endif %}
+                
+                <div class="mb-3">
+                    <label for="name" class="form-label">Назва бази практики</label>
+                    <input type="text" class="form-control" id="name" name="name" 
+                           value="{{ base.name if base else '' }}" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="address" class="form-label">Адреса</label>
+                    <input type="text" class="form-control" id="address" name="address" 
+                           value="{{ base.address if base else '' }}">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="contact_info" class="form-label">Контактна інформація</label>
+                    <input type="text" class="form-control" id="contact_info" name="contact_info" 
+                           value="{{ base.contact_info if base else '' }}">
+                </div>
+                
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        {{ 'Зберегти зміни' if base else 'Додати базу практики' }}
+                    </button>
+                    {% if base %}
+                    <a href="{{ url_for('views.manage_practice_bases') }}" class="btn btn-secondary">Скасувати</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Таблиця зі списком баз практики -->
+    <div class="card">
+        <div class="card-header">
+            <h4 class="mb-0">Список баз практики</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Назва</th>
+                            <th>Адреса</th>
+                            <th>Контактна інформація</th>
+                            <th>Дії</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for base in practice_bases %}
+                        <tr>
+                            <td>{{ base.id }}</td>
+                            <td>{{ base.name }}</td>
+                            <td>{{ base.address or '-' }}</td>
+                            <td>{{ base.contact_info or '-' }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{{ url_for('views.manage_practice_bases', edit=base.id) }}" 
+                                       class="btn btn-sm btn-primary">Редагувати</a>
+                                    <form method="POST" action="{{ url_for('views.manage_practice_bases', delete=base.id) }}" 
+                                          class="d-inline" onsubmit="return confirm('Ви впевнені, що хочете видалити цю базу практики?');">
+                                        <button type="submit" class="btn btn-sm btn-danger">Видалити</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
