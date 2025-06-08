@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
-from .models import Users, PracticeBases, Groups, PracticeStages, PracticeAssignments
+from .models import Users, PracticeBases, Groups, PracticeStages, PracticeAssignments, PracticeEvaluations, PracticeReports
 from . import db
 
 
@@ -424,9 +424,25 @@ def update_practice_materials(assignment_id):
     report_link = request.form.get('report_link')
     github_link = request.form.get('github_link')
     
-    # Оновлюємо дані
-    assignment.report_link = report_link
-    assignment.github_link = github_link
+    # Перевіряємо, чи вже є звіт для цього призначення
+    report = db.session.query(PracticeReports).filter_by(
+        assignment_id=assignment_id
+    ).first()
+    
+    if report:
+        # Оновлюємо існуючий звіт
+        report.github_link = github_link
+        if report_link:
+            report.file_path = report_link
+    else:
+        # Створюємо новий звіт
+        report = PracticeReports(
+            assignment_id=assignment_id,
+            title=f"Звіт з практики {assignment.practice_stage.name}",
+            file_path=report_link,
+            github_link=github_link
+        )
+        db.session.add(report)
     
     # Якщо додано посилання на звіт, змінюємо статус на "В процесі"
     if report_link and assignment.status == 'assigned':
@@ -435,3 +451,63 @@ def update_practice_materials(assignment_id):
     db.session.commit()
     flash('Матеріали практики успішно оновлено', 'success')
     return redirect(url_for('views.my_practices'))
+
+@views.route('/update-grade/<int:assignment_id>', methods=['POST'])
+@login_required
+def update_grade(assignment_id):
+    if current_user.role != 'teacher':
+        flash('Доступ заборонено', 'danger')
+        return redirect(url_for('views.index'))
+    
+    # Перевіряємо, чи є поточний користувач керівником цієї практики
+    assignment = db.session.query(PracticeAssignments).filter_by(
+        id=assignment_id,
+        supervisor_id=current_user.id
+    ).first()
+    
+    if not assignment:
+        flash('Практику не знайдено', 'danger')
+        return redirect(url_for('views.my_students'))
+    
+    # Отримуємо оцінку з форми
+    grade = request.form.get('grade')
+    comments = request.form.get('comments', '')
+    
+    # Валідація оцінки
+    if grade:
+        try:
+            grade = int(grade)
+            if grade < 1 or grade > 100:
+                flash('Оцінка повинна бути від 1 до 100', 'danger')
+                return redirect(url_for('views.my_students'))
+        except ValueError:
+            flash('Невірний формат оцінки', 'danger')
+            return redirect(url_for('views.my_students'))
+    
+    # Перевіряємо, чи вже є оцінка для цього призначення
+    evaluation = db.session.query(PracticeEvaluations).filter_by(
+        assignment_id=assignment_id,
+        evaluator_id=current_user.id
+    ).first()
+    
+    if evaluation:
+        # Оновлюємо існуючу оцінку
+        evaluation.grade = str(grade) if grade else None
+        evaluation.comments = comments
+    else:
+        # Створюємо нову оцінку
+        evaluation = PracticeEvaluations(
+            assignment_id=assignment_id,
+            evaluator_id=current_user.id,
+            grade=str(grade) if grade else None,
+            comments=comments
+        )
+        db.session.add(evaluation)
+    
+    # Якщо є оцінка, змінюємо статус на "Завершено"
+    if grade:
+        assignment.status = 'completed'
+    
+    db.session.commit()
+    flash('Оцінку успішно оновлено', 'success')
+    return redirect(url_for('views.my_students'))

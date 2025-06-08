@@ -33,13 +33,13 @@
                         <div class="mb-3">
                             <label for="report_link_{{ assignment.id }}" class="form-label">Посилання на звіт</label>
                             <input type="url" class="form-control" id="report_link_{{ assignment.id }}" 
-                                   name="report_link" value="{{ assignment.report_link or '' }}"
+                                   name="report_link" value="{{ assignment.practice_reports[0].file_path if assignment.practice_reports else '' }}"
                                    placeholder="https://docs.google.com/document/...">
                         </div>
                         <div class="mb-3">
                             <label for="github_link_{{ assignment.id }}" class="form-label">Додатки до звіту</label>
                             <input type="url" class="form-control" id="github_link_{{ assignment.id }}" 
-                                   name="github_link" value="{{ assignment.github_link or '' }}"
+                                   name="github_link" value="{{ assignment.practice_reports[0].github_link if assignment.practice_reports else '' }}"
                                    placeholder="https://github.com/...">
                         </div>
                         <div class="mb-3">

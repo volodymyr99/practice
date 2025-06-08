@@ -140,7 +140,7 @@ class PracticeAssignments(Base):
     start_date: Mapped[datetime.date] = mapped_column(Date)
     end_date: Mapped[datetime.date] = mapped_column(Date)
     status: Mapped[Optional[str]] = mapped_column(ENUM('assigned', 'in_progress', 'completed'), server_default=text("'assigned'"))
-
+ 
     base: Mapped['PracticeBases'] = relationship('PracticeBases', back_populates='practice_assignments')
     group: Mapped['Groups'] = relationship('Groups', back_populates='practice_assignments')
     practice_stage: Mapped['PracticeStages'] = relationship('PracticeStages', back_populates='practice_assignments')

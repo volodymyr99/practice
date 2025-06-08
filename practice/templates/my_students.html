@@ -22,6 +22,7 @@
                             <th>Дата завершення</th>
                             <th>Статус</th>
                             <th>Звіт</th>
+                            <th>Оцінка</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -43,16 +44,32 @@
                                 {% endif %}
                             </td>
                             <td>
-                                {% if assignment.report %}
-                                    <span class="badge bg-success">Завантажено</span>
+                                {% if assignment.practice_reports and assignment.practice_reports[0].file_path %}
+                                    <a href="{{ assignment.practice_reports[0].file_path }}" target="_blank" class="btn btn-sm btn-success">
+                                        <i class="fas fa-file-alt"></i> Здано
+                                    </a>
                                 {% else %}
-                                    <span class="badge bg-danger">Відсутній</span>
+                                    <span class="badge bg-danger">Не здано</span>
                                 {% endif %}
+                            </td>
+                            <td>
+                                <form method="POST" action="{{ url_for('views.update_grade', assignment_id=assignment.id) }}" class="d-flex flex-column">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <input type="number" class="form-control form-control-sm" 
+                                               name="grade" value="{{ assignment.practice_evaluations[0].grade if assignment.practice_evaluations else '' }}"
+                                               min="1" max="100" style="width: 70px;">
+                                        <button type="submit" class="btn btn-sm btn-primary ms-2">
+                                            <i class="fas fa-save"></i>
+                                        </button>
+                                    </div>
+                                    <textarea class="form-control form-control-sm" name="comments" 
+                                              placeholder="Коментар до оцінки" rows="2">{{ assignment.practice_evaluations[0].comments if assignment.practice_evaluations else '' }}</textarea>
+                                </form>
                             </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="8" class="text-center">Немає студентів для цього типу практики</td>
+                            <td colspan="9" class="text-center">Немає студентів для цього типу практики</td>
                         </tr>
                         {% endfor %}
                     </tbody>
