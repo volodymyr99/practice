@@ -37,17 +37,18 @@
                                    placeholder="https://docs.google.com/document/...">
                         </div>
                         <div class="mb-3">
-                            <label for="github_link_{{ assignment.id }}" class="form-label">Посилання на GitHub репозиторій</label>
+                            <label for="github_link_{{ assignment.id }}" class="form-label">Додатки до звіту</label>
                             <input type="url" class="form-control" id="github_link_{{ assignment.id }}" 
                                    name="github_link" value="{{ assignment.github_link or '' }}"
                                    placeholder="https://github.com/...">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Фотографії практики</label>
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle"></i> Функціонал завантаження фотографій буде додано пізніше
-                            </div>
+                            <button type="button" class="btn btn-info">
+                                Додати фото
+                            </button>
                         </div>
+                        <br>
                         <button type="submit" class="btn btn-primary">Зберегти зміни</button>
                     </form>
                 </div>

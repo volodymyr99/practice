@@ -388,3 +388,50 @@ def my_students():
     return render_template('my_students.html',
                          practice_stages=practice_stages,
                          stage_assignments=stage_assignments)
+
+@views.route('/my-practices')
+@login_required
+def my_practices():
+    if current_user.role != 'student':
+        flash('Доступ заборонено', 'danger')
+        return redirect(url_for('views.index'))
+    
+    # Отримуємо всі практики студента
+    assignments = db.session.query(PracticeAssignments).filter_by(
+        student_id=current_user.id
+    ).order_by(PracticeAssignments.start_date.desc()).all()
+    
+    return render_template('student_practices.html', assignments=assignments)
+
+@views.route('/update-practice-materials/<int:assignment_id>', methods=['POST'])
+@login_required
+def update_practice_materials(assignment_id):
+    if current_user.role != 'student':
+        flash('Доступ заборонено', 'danger')
+        return redirect(url_for('views.index'))
+    
+    # Перевіряємо, чи належить практика поточному студенту
+    assignment = db.session.query(PracticeAssignments).filter_by(
+        id=assignment_id,
+        student_id=current_user.id
+    ).first()
+    
+    if not assignment:
+        flash('Практику не знайдено', 'danger')
+        return redirect(url_for('views.my_practices'))
+    
+    # Отримуємо дані з форми
+    report_link = request.form.get('report_link')
+    github_link = request.form.get('github_link')
+    
+    # Оновлюємо дані
+    assignment.report_link = report_link
+    assignment.github_link = github_link
+    
+    # Якщо додано посилання на звіт, змінюємо статус на "В процесі"
+    if report_link and assignment.status == 'assigned':
+        assignment.status = 'in_progress'
+    
+    db.session.commit()
+    flash('Матеріали практики успішно оновлено', 'success')
+    return redirect(url_for('views.my_practices'))

@@ -48,8 +48,7 @@
             
             {% elif current_user.role == 'student' %}
                 <a href="{{ url_for('views.home') }}">Головна</a>
-                <a href="{{ url_for('views.about') }}">Моя практика</a>
-                <a href="{{ url_for('views.about') }}">Завантажити звіт</a>
+                <a href="{{ url_for('views.my_practices') }}">Моя практика</a>
                 <a href="{{ url_for('views.about') }}">Ресурси</a>
                 <a href="{{ url_for('views.about') }}">Повідомлення</a>
                 <a href="{{ url_for('views.about') }}">Про систему</a>
