@@ -362,3 +362,29 @@ def get_group_students(group_id):
     except Exception as e:
         print(f"Error in get_group_students: {str(e)}")  # Для дебагу
         return jsonify({'error': 'Internal server error'}), 500
+
+@views.route('/my-students')
+@login_required
+def my_students():
+    if current_user.role != 'teacher':
+        flash('Доступ заборонено', 'danger')
+        return redirect(url_for('views.index'))
+    
+    # Отримуємо всі типи практик
+    practice_stages = db.session.query(PracticeStages).all()
+    
+    # Створюємо словник для зберігання призначень за типами практик
+    stage_assignments = {}
+    
+    # Для кожного типу практики отримуємо призначення
+    for stage in practice_stages:
+        assignments = db.session.query(PracticeAssignments).filter_by(
+            practice_stage_id=stage.id,
+            supervisor_id=current_user.id
+        ).order_by(PracticeAssignments.start_date.desc()).all()
+        
+        stage_assignments[stage.id] = assignments
+    
+    return render_template('my_students.html',
+                         practice_stages=practice_stages,
+                         stage_assignments=stage_assignments)

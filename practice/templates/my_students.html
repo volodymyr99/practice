@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Студенти</h2>
+
+    {% for stage in practice_stages %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4 class="mb-0">{{ stage.name }}</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>№</th>
+                            <th>Студент</th>
+                            <th>Група</th>
+                            <th>База практики</th>
+                            <th>Дата початку</th>
+                            <th>Дата завершення</th>
+                            <th>Статус</th>
+                            <th>Звіт</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for assignment in stage_assignments[stage.id] %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ assignment.student.full_name or assignment.student.username }}</td>
+                            <td>{{ assignment.group.name }}</td>
+                            <td>{{ assignment.base.name }}</td>
+                            <td>{{ assignment.start_date.strftime('%d.%m.%Y') }}</td>
+                            <td>{{ assignment.end_date.strftime('%d.%m.%Y') }}</td>
+                            <td>
+                                {% if assignment.status == 'assigned' %}
+                                    <span class="badge bg-primary">Призначено</span>
+                                {% elif assignment.status == 'in_progress' %}
+                                    <span class="badge bg-warning">В процесі</span>
+                                {% elif assignment.status == 'completed' %}
+                                    <span class="badge bg-success">Завершено</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if assignment.report %}
+                                    <span class="badge bg-success">Завантажено</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Відсутній</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center">Немає студентів для цього типу практики</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %} 

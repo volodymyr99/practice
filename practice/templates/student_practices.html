@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Мої практики</h2>
+
+    {% for assignment in assignments %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4 class="mb-0">{{ assignment.practice_stage.name }}</h4>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <h5>Інформація про практику</h5>
+                    <p><strong>База практики:</strong> {{ assignment.base.name }}</p>
+                    <p><strong>Керівник практики:</strong> {{ assignment.supervisor.full_name or assignment.supervisor.username }}</p>
+                    <p><strong>Дата початку:</strong> {{ assignment.start_date.strftime('%d.%m.%Y') }}</p>
+                    <p><strong>Дата завершення:</strong> {{ assignment.end_date.strftime('%d.%m.%Y') }}</p>
+                    <p><strong>Статус:</strong> 
+                        {% if assignment.status == 'assigned' %}
+                            <span class="badge bg-primary">Призначено</span>
+                        {% elif assignment.status == 'in_progress' %}
+                            <span class="badge bg-warning">В процесі</span>
+                        {% elif assignment.status == 'completed' %}
+                            <span class="badge bg-success">Завершено</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <h5>Матеріали практики</h5>
+                    <form method="POST" action="{{ url_for('views.update_practice_materials', assignment_id=assignment.id) }}" class="mb-3">
+                        <div class="mb-3">
+                            <label for="report_link_{{ assignment.id }}" class="form-label">Посилання на звіт</label>
+                            <input type="url" class="form-control" id="report_link_{{ assignment.id }}" 
+                                   name="report_link" value="{{ assignment.report_link or '' }}"
+                                   placeholder="https://docs.google.com/document/...">
+                        </div>
+                        <div class="mb-3">
+                            <label for="github_link_{{ assignment.id }}" class="form-label">Посилання на GitHub репозиторій</label>
+                            <input type="url" class="form-control" id="github_link_{{ assignment.id }}" 
+                                   name="github_link" value="{{ assignment.github_link or '' }}"
+                                   placeholder="https://github.com/...">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Фотографії практики</label>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> Функціонал завантаження фотографій буде додано пізніше
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Зберегти зміни</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> У вас поки немає призначених практик
+    </div>
+    {% endfor %}
+</div>
+{% endblock %} 

@@ -7,6 +7,11 @@
     <link rel="stylesheet" type="text/css" href="/static/content/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="/static/content/site.css" />
     <script src="/static/scripts/modernizr-2.6.2.js"></script>
+    <style>
+        .text-white {
+            color: #fff !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -24,18 +29,18 @@
             
             {% if current_user.role == 'staff' %}
                 <a href="{{ url_for('views.home') }}">Головна</a>
-                <a href="{{ url_for('views.about') }}">Управління користувачами</a>
-                <a href="{{ url_for('views.manage_groups') }}">Управління групами</a>
+                <a href="{{ url_for('views.about') }}">Користувачі</a>
+                <a href="{{ url_for('views.manage_groups') }}">Групи</a>
                 <a href="{{ url_for('views.manage_practice_bases') }}">Бази практики</a>
-                <a href="{{ url_for('views.about') }}">Етапи практики</a>
-                <a href="{{ url_for('views.create_practice_order') }}">Формування наказів</a>
+                <a href="{{ url_for('views.about') }}">Практика</a>
+                <a href="{{ url_for('views.create_practice_order') }}">Накази</a>
                 <a href="{{ url_for('views.about') }}">Про систему</a>
                 <a href="{{ url_for('views.logout') }}">Вихід</a>
             
             {% elif current_user.role == 'teacher' %}
                 <a href="{{ url_for('views.home') }}">Головна</a>
-                <a href="{{ url_for('views.about') }}">Мої студенти</a>
-                <a href="{{ url_for('views.about') }}">Оцінювання практики</a>
+                <a href="{{ url_for('views.my_students') }}">Студенти</a>
+                <a href="{{ url_for('views.about') }}">Оцінки</a>
                 <a href="{{ url_for('views.about') }}">Ресурси</a>
                 <a href="{{ url_for('views.about') }}">Повідомлення</a>
                 <a href="{{ url_for('views.about') }}">Про систему</a>
